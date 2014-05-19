@@ -1,5 +1,14 @@
 __author__ = 'anthonylim'
 
+## Anthony Lim
+# alim4@ucsc.edu
+#
+# CMPS 5P, Spring 2014
+# Assignment 4=6
+#
+# Frequency
+# ##
+
 from collections import Counter
 from collections import defaultdict
 
@@ -7,24 +16,31 @@ import operator
 import re
 
 alphabet = "abcdefghijklmnopqrstuvwxyz"
-
+text_file = open("Output.txt", "w")
 
 def main():
     # input = raw_input("What file would you like to read?\n")
-    # print ("Jekyll and Hyde")
-    # word_count, letter_count = process_book('stevenson')
-    # top_thirty(word_count)
-    # top_letters(letter_count)
-    #
-    # print ("War of the Worlds")
-    # word_count, letter_count = process_book('wells')
-    # top_thirty(word_count)
-    # top_letters(letter_count)
-    #
-    # print ("Great Expectations")
-    # word_count, letter_count = process_book('dickens')
-    # top_thirty(word_count)
-    # top_letters(letter_count)
+    text_file.write("Anthony Lim\nalim4@ucsc.edu\n\n")
+    print ("==================\nJekyll and Hyde\n==================")
+    text_file.write("==================\nJekyll and Hyde\n==================\n")
+    word_count, letter_count = process_book('stevenson')
+    top_thirty(word_count)
+    top_letters(letter_count)
+
+    print ("==================\nWar of the Worlds\n==================")
+    text_file.write("==================\nWar of the Worlds\n==================")
+    word_count, letter_count = process_book('wells')
+    top_thirty(word_count)
+    top_letters(letter_count)
+
+    print ("==================\nGreat Expectations\n==================")
+    text_file.write("==================\nGreat Expectations\n==================\n")
+    word_count, letter_count = process_book('dickens')
+    top_thirty(word_count)
+    top_letters(letter_count)
+
+    print ("###################\nStats for all books\n###################")
+    text_file.write("###################\nStats for all books\n###################\n")
 
     word_count_list = []
     letter_count_list = []
@@ -43,8 +59,16 @@ def main():
 
     combined_top_thirty(word_count_list, letter_count_list)
 
+    text_file.write("\nEOF")
+    text_file.close()
+
 
 def process_book(book_file):
+    """
+
+    :param book_file: the name of the file to open
+    :return: dictionaries of the words in the book and letters in the book
+    """
     word_count = defaultdict(int)
     letter_count = defaultdict(int)
 
@@ -78,29 +102,69 @@ def process_book(book_file):
 
 
 def top_letters(letter_count):
-    print ("")
-    print "{0: <9} {1}".format("letter", "frequency")
+    """
+    prints out the most frequent letters and their frequency
+    :param letter_count: dictionary of letters in book
+    """
+    letter_len = 0
     for letter in letter_count.items():
-        print "{0: <10} {1}".format(letter[0], letter[1])
+        letter_len += letter[1]
+
+    print "The frequencies for each letter, ordered by frequency (most frequent first)."
+    text_file.write("The frequencies for each letter, ordered by frequency (most frequent first).\n")
+    print "{0: <9} {1}".format("letter", "frequency")
+    text_file.write("{0: <9} {1}\n".format("letter", "frequency"))
+    for letter in letter_count.items():
+        print "{0: <10} {1:.4}".format(letter[0], float(letter[1]) / letter_len)
+        text_file.write("{0: <10} {1:.4}\n".format(letter[0], float(letter[1]) / letter_len))
 
 
 def top_thirty(word_count):
     # Sort the dictionary based on value
+    """
+    prints out the top 30 most frequent words and their frequency
+    :param word_count: dictionary of words in book
+    """
     sorted_book = sorted(word_count.iteritems(), key=operator.itemgetter(1), reverse=True)
 
+    print "The top thirty most frequently used words, ordered by frequency (most frequent first)."
+    text_file.write("The top thirty most frequently used words, ordered by frequency (most frequent first).\n")
     print "{0: <12} {1}".format("word", "frequency")
+    text_file.write("{0: <12} {1}\n".format("word", "frequency"))
     for i in range(30):
         print "{0: <3}: {1: <8} {2:.4}".format(i + 1,
                                                sorted_book[i][0],
                                                float(sorted_book[i][1]) / len(sorted_book))
+        text_file.write("{0: <3}: {1: <8} {2:.4}\n".format(i + 1,
+                                               sorted_book[i][0],
+                                               float(sorted_book[i][1]) / len(sorted_book)))
 
 
 def combined_top_thirty(books, letters):
+    """
+    gets the top 30 words and frequent letters among all the
+    books, and prints out the combined result
+    :param books: list of books to go through
+    :param letters: list of letters to go through
+    """
     sorted_list = []
     total_len = 0
     for book in books:
         total_len += len(book)
-        sorted_list.append(book)
+        sorted_list.append(sorted(book.iteritems(), key=operator.itemgetter(1), reverse=True))
+
+    wordlist = []
+    tuplelist = []
+    for i in sorted_list:
+        for j in range(30):
+            wordlist.append(i[j][0])
+            tuplelist.append(i[j])
+
+    temp = []
+    for i in Counter(wordlist).items():
+        # If word occurs in all three dicts
+        if i[1] == 3:
+            temp.append(i[0])
 
     # Sum the dictionaries together
     dictsum = sum(
@@ -108,13 +172,27 @@ def combined_top_thirty(books, letters):
         Counter()
     )
 
+
     result = sorted(dict(dictsum).iteritems(), key=operator.itemgetter(1), reverse=True)
 
+    print "A list of the words in all three top-thirty lists, ordered by overall weighted frequency"
+    text_file.write("A list of the words in all three top-thirty lists, ordered by overall weighted frequency\n")
+    for i in range(30):
+        if result[i][0] in temp:
+            print "{0}: {1:<10} {2:.4}".format(i+1, result[i][0], float(result[i][1]) / total_len)
+            text_file.write("{0}: {1:<10} {2:.4}\n".format(i+1, result[i][0], float(result[i][1]) / total_len))
+
+    print "The top thirty words across all books, with each book weighted equally"
+    text_file.write("The top thirty words across all books, with each book weighted equally\n")
     print "{0: <12} {1}".format("word", "frequency")
+    text_file.write("{0: <12} {1}\n".format("word", "frequency"))
     for i in range(30):
         print "{0: <3}: {1: <8} {2:.4}".format(i + 1,
                                                result[i][0],
                                                float(result[i][1]) / total_len)
+        text_file.write("{0: <3}: {1: <8} {2:.4}\n".format(i + 1,
+                                               result[i][0],
+                                               float(result[i][1]) / total_len))
 
     # For letters
     letter_list = []
@@ -133,11 +211,17 @@ def combined_top_thirty(books, letters):
 
     letterresult = sorted(dict(letterdictsum).iteritems(), key=operator.itemgetter(1), reverse=True)
 
+    print "The letter frequencies across all books, with each book weighted equally."
+    text_file.write("The letter frequencies across all books, with each book weighted equally.\n")
     print "{0: <12} {1}".format("letter", "frequency")
+    text_file.write("{0: <12} {1}\n".format("letter", "frequency"))
     for i in range(26):
         print "{0: <3}: {1: <8} {2:.4}".format(i + 1,
                                                letterresult[i][0],
                                                float(letterresult[i][1]) / letter_len)
+        text_file.write("{0: <3}: {1: <8} {2:.4}\n".format(i + 1,
+                                               letterresult[i][0],
+                                               float(letterresult[i][1]) / letter_len))
 
-
-main()
+if __name__ == "__main__":
+    main()
